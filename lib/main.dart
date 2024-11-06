@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:vigensia_app/views/login/custom_login.dart';
-import 'package:vigensia_app/views/login/login.dart';
+import 'package:vigensia_ubsi/views/login/custom_login.dart';
 
 void main() {
   runApp(const MyApp());

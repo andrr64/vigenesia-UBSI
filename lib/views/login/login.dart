@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
-import 'package:vigensia_app/main.dart';
-import 'package:vigensia_app/views/register/register.dart';
+import 'package:vigensia_ubsi/main.dart';
+import 'package:vigensia_ubsi/views/register/register.dart';
 
 class Login extends StatefulWidget {
   const Login({super.key});

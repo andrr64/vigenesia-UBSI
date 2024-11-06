@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
-import 'package:vigensia_app/main.dart';
+import 'package:vigensia_ubsi/main.dart';
 
 class Register extends StatefulWidget {
   const Register({super.key});
@@ -40,8 +40,7 @@ class _RegisterState extends State<Register> {
       try {
         // URL API untuk register
         final response = await http.post(
-          Uri.parse(
-              getApiRoute('registrasi')), // Sesuaikan dengan URL API-mu
+          Uri.parse(getApiRoute('registrasi')), // Sesuaikan dengan URL API-mu
           headers: {
             'Content-Type': 'application/json',
           },

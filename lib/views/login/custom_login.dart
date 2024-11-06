@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:vigensia_app/main.dart';
-import 'package:vigensia_app/views/register/register.dart';
+import 'package:vigensia_ubsi/main.dart';
+import 'package:vigensia_ubsi/views/register/register.dart';
 import 'package:http/http.dart' as http;
 
 class CustomLoginScreen extends StatefulWidget {
