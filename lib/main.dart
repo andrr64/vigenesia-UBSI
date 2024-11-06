@@ -1,26 +1,37 @@
+import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:flutter/material.dart';
-import 'package:vigenesia_ubsi/views/login/custom_login.dart';
+import 'package:loader_overlay/loader_overlay.dart';
+import 'package:vigenesia_ubsi/provider/user.dart';
+import 'package:vigenesia_ubsi/views/home/homescreen.dart';
+import 'package:vigenesia_ubsi/views/login/login.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(const ProviderScope(child: MyApp())); // Tambahkan ProviderScope
 }
 
-const PROXY_API =
-    "http://10.4.21.106/Repository/ViGenSia/vigensia_api/index.php/api/";
+const proxy =
+    "http://localhost/Repository/ViGenSia/vigensia_api/index.php/api/";
 
 String getApiRoute(route) {
-  return '$PROXY_API/$route';
+  return '$proxy/$route';
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends ConsumerWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
-  Widget build(BuildContext context) {
-    return const MaterialApp(
+  Widget build(BuildContext context, WidgetRef ref) {
+    Widget getHome() {
+      if (ref.read(userProvider) == null) {
+        return const LoginScreen();
+      } else {
+        return const HomeScreen();
+      }
+    }
+
+    return MaterialApp(
       title: 'VigenSia',
-      home: CustomLoginScreen(),
+      home: LoaderOverlay(child: getHome()),
     );
   }
 }
