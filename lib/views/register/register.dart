@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
-import 'package:vigensia_ubsi/main.dart';
+import 'package:vigenesia_ubsi/main.dart';
 
 class Register extends StatefulWidget {
   const Register({super.key});
