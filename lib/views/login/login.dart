@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:loader_overlay/loader_overlay.dart';
@@ -8,7 +7,6 @@ import 'package:vigenesia_ubsi/provider/user.dart';
 import 'package:vigenesia_ubsi/views/home/homescreen.dart';
 import 'package:vigenesia_ubsi/views/register/register.dart';
 import 'package:http/http.dart' as http;
-import 'package:vigenesia_ubsi/model/user.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
