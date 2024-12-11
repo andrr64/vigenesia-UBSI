@@ -1,24 +1,22 @@
 class UserModel {
-  final String iduser;
+  final int iduser;
   final String nama;
   final String profesi;
   final String email;
-  final String password;
-  final String roleId;
-  final String isActive;
-  final String tanggalInput;
-  final String modified;
+  final bool isActive;
+  final String created;
+  final String updated;
+  final String avatarLink;
 
   UserModel({
     required this.iduser,
     required this.nama,
     required this.profesi,
     required this.email,
-    required this.password,
-    required this.roleId,
     required this.isActive,
-    required this.tanggalInput,
-    required this.modified,
+    required this.created,
+    required this.updated,
+    required this.avatarLink,
   });
 
   // Fungsi untuk mengonversi JSON menjadi UserModel
@@ -28,11 +26,10 @@ class UserModel {
       nama: json['nama'],
       profesi: json['profesi'],
       email: json['email'],
-      password: json['password'],
-      roleId: json['role_id'],
       isActive: json['is_active'],
-      tanggalInput: json['tanggal_input'],
-      modified: json['modified'],
+      created: json['created'],
+      updated: json['updated'],
+      avatarLink: json['avatar_link'] ?? '', // Default jika null
     );
   }
 
@@ -43,36 +40,35 @@ class UserModel {
       'nama': nama,
       'profesi': profesi,
       'email': email,
-      'password': password,
-      'role_id': roleId,
       'is_active': isActive,
-      'tanggal_input': tanggalInput,
-      'modified': modified,
+      'created': created,
+      'updated': updated,
+      'avatar_link': avatarLink,
     };
   }
 
   // Fungsi copyWith untuk membuat salinan baru dari UserModel dengan data yang dapat diubah
   UserModel copyWith({
-    String? iduser,
+    int? iduser,
     String? nama,
     String? profesi,
     String? email,
     String? password,
     String? roleId,
-    String? isActive,
-    String? tanggalInput,
-    String? modified,
+    bool? isActive,
+    String? created,
+    String? updated,
+    String? avatarLink,
   }) {
     return UserModel(
       iduser: iduser ?? this.iduser,
       nama: nama ?? this.nama,
       profesi: profesi ?? this.profesi,
       email: email ?? this.email,
-      password: password ?? this.password,
-      roleId: roleId ?? this.roleId,
       isActive: isActive ?? this.isActive,
-      tanggalInput: tanggalInput ?? this.tanggalInput,
-      modified: modified ?? this.modified,
+      created: created ?? this.created,
+      updated: updated ?? this.updated,
+      avatarLink: avatarLink ?? this.avatarLink,
     );
   }
 }

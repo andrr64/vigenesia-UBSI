@@ -1,8 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
+import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:vigenesia_ubsi/model/user.dart';
+import 'package:vigenesia_ubsi/provider/motivasi.dart';
 import 'package:vigenesia_ubsi/provider/user.dart';
+import 'package:vigenesia_ubsi/views/components/postingan_motivasi.dart';
+import 'package:vigenesia_ubsi/views/components/postingan_motivasi_self.dart';
+import 'package:vigenesia_ubsi/views/components/snackbar.dart';
 import 'package:vigenesia_ubsi/views/login/login.dart';
+import 'package:vigenesia_ubsi/views/post-motivasi/post_motivasi.dart';
+import 'package:loader_overlay/loader_overlay.dart';
+import 'package:vigenesia_ubsi/views/profil/profile_sendiri.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -11,200 +20,327 @@ class HomeScreen extends ConsumerStatefulWidget {
   HomeScreenState createState() => HomeScreenState();
 }
 
+Widget dHeight(double h) {
+  return SizedBox(
+    height: h,
+  );
+}
+
 class HomeScreenState extends ConsumerState<HomeScreen> {
-  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  final TextEditingController teksMotivasi = TextEditingController();
 
   @override
-  Widget build(BuildContext context) {
-    final width = MediaQuery.of(context).size.width;
-    final bool isLargeScreen = width > 800;
-    var dataPengguna = ref.read(userProvider)!;
+  void initState() {
+    super.initState();
+    Future.microtask(() {
+      ref.read(motivasiProvider.notifier).fetchMotivasi();
+    });
+  }
 
-    return Scaffold(
-      backgroundColor: Colors.white,
-      key: _scaffoldKey,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        titleSpacing: 0,
-        leading: isLargeScreen
-            ? null
-            : IconButton(
-                icon: const Icon(Icons.menu),
-                onPressed: () => _scaffoldKey.currentState?.openDrawer(),
-              ),
-        title: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Text(
-                "Logo",
-                style:
-                    TextStyle(color: Colors.green, fontWeight: FontWeight.bold),
-              ),
-              if (isLargeScreen) Expanded(child: _navBarItems())
-            ],
+  Widget writeSomethingInHere(
+      BuildContext context, String avatarLink, UserModel userdata) {
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 10),
+      padding: const EdgeInsets.all(15),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(10),
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.2),
+            spreadRadius: 1,
+            blurRadius: 5,
           ),
-        ),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 16.0),
-            child: CircleAvatar(child: _ProfileIcon(ref, _scaffoldKey)),
-          )
         ],
       ),
-      drawer: isLargeScreen ? null : _drawer(),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
+      child: Column(
+        children: [
+          Row(
             children: [
-              SizedBox(
-                height: 74,
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    const CircleAvatar(
-                      radius: 40,
-                      backgroundImage: AssetImage('assets/profile_picture.png'),
-                    ),
-                    const SizedBox(width: 16), // Jarak antara foto dan teks
-                    Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          dataPengguna.nama,
-                          style: const TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black87,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          dataPengguna.profesi,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            color: Colors.grey,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
+              // Avatar
+              CircleAvatar(
+                radius: 20,
+                backgroundImage: NetworkImage(avatarLink),
+                backgroundColor: Colors.grey[200],
+              ),
+              const SizedBox(width: 10),
+              // Input field
+              Expanded(
+                child: TextField(
+                  decoration: InputDecoration(
+                    hintText: "Ketik motivasi disini...",
+                    border: InputBorder.none,
+                    hintStyle: TextStyle(color: Colors.grey[400]),
+                  ),
+                  controller: teksMotivasi,
                 ),
-              )
+              ),
             ],
           ),
-        ),
+          Row(
+            children: [
+              Expanded(
+                  child: Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.photo, color: Colors.black87),
+                    onPressed: () async {
+                      final picker = ImagePicker();
+                      final pickedImage =
+                          await picker.pickImage(source: ImageSource.gallery);
+                      if (pickedImage == null) return;
+
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => PostMotivasi(
+                                    callback: () {
+                                      teksMotivasi.text = '';
+                                      ref
+                                          .read(motivasiProvider.notifier)
+                                          .fetchMotivasi();
+                                    },
+                                    image: pickedImage,
+                                    motivasi: teksMotivasi.text,
+                                  )));
+                    },
+                  ),
+                ],
+              )),
+              const SizedBox(width: 2.5),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.black87,
+                  shape: const RoundedRectangleBorder(
+                    borderRadius: BorderRadius.zero,
+                  ),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
+                ),
+                onPressed: () async {
+                  if (teksMotivasi.text.isNotEmpty) {
+                    try {
+
+                    } catch (e) {
+                      showFailedSnackbar(context, 'Gagal');
+                    } finally {
+                      context.loaderOverlay.hide();
+                    }
+                  }
+                },
+                child: const Text(
+                  "Post",
+                  style: TextStyle(color: Colors.white),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+        ],
       ),
     );
   }
 
-  Widget _drawer() => Drawer(
-        child: ListView(
-          children: _menuItems
-              .map((item) => ListTile(
-                    onTap: () {
-                      _scaffoldKey.currentState?.openEndDrawer();
-                    },
-                    title: Text(item),
-                  ))
-              .toList(),
-        ),
-      );
-
-  Widget _navBarItems() => Row(
-        mainAxisAlignment: MainAxisAlignment.end,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: _menuItems
-            .map(
-              (item) => InkWell(
-                onTap: () {},
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                      vertical: 24.0, horizontal: 16),
-                  child: Text(
-                    item,
-                    style: const TextStyle(fontSize: 18),
-                  ),
-                ),
-              ),
-            )
-            .toList(),
-      );
-}
-
-final List<String> _menuItems = <String>[
-  'About',
-  'Contact',
-  'Settings',
-  'Sign Out',
-];
-
-enum Menu { itemOne, itemTwo, itemThree }
-
-class _ProfileIcon extends StatelessWidget {
-  const _ProfileIcon(this.ref, this.scaffoldKey);
-  final WidgetRef ref;
-  final GlobalKey<ScaffoldState> scaffoldKey;
+  void updateData() {
+    ref.read(motivasiProvider.notifier).fetchMotivasi();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return PopupMenuButton<Menu>(
-      icon: const Icon(Icons.person),
-      offset: const Offset(0, 40),
-      onSelected: (Menu item) {
-        if (item == Menu.itemThree) {
-          // Tutup drawer jika terbuka
-          if (scaffoldKey.currentState?.isDrawerOpen ?? false) {
-            Navigator.pop(context); // Tutup drawer
-          }
-          // Tampilkan dialog logout
-          showDialog(
-            context: context,
-            builder: (context) => AlertDialog(
-              title: const Text('Logout'),
-              content: const Text('Anda yakin ingin keluar?'),
-              actions: [
-                TextButton(
-                  onPressed: () {
-                    // Logout dan navigasi ke LoginScreen
-                    ref.read(userProvider.notifier).logout();
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => const LoginScreen()),
-                    );
+    final dataPengguna = ref.watch(userProvider)!;
+    final motivasiList = ref.watch(motivasiProvider);
+
+    return Scaffold(
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(bottom: 16, right: 16),
+        child: Column(
+          mainAxisSize: MainAxisSize.min, // Mencegah mengambil ruang penuh
+          mainAxisAlignment: MainAxisAlignment.end, // Menempatkan di bawah
+          crossAxisAlignment: CrossAxisAlignment.end, // Rata kanan
+          children: [
+            ElevatedButton(
+              onPressed: () {
+                ref.read(motivasiProvider.notifier).fetchMotivasi();
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.black87,
+              ),
+              child: const Icon(
+                Icons.refresh,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(height: 10), // Jarak antar tombol
+            ElevatedButton(
+              onPressed: () {
+                ref.read(motivasiProvider.notifier).fetchMotivasi();
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.black87,
+              ),
+              child: const Icon(
+                Icons.refresh,
+                color: Colors.white,
+              ),
+            ),
+            SpeedDial(
+              icon: Icons.menu,
+              activeIcon: Icons.close,
+              backgroundColor: Colors.black87,
+              children: [
+                SpeedDialChild(
+                  child: const Icon(Icons.refresh, color: Colors.white),
+                  label: 'Refresh',
+                  backgroundColor: Colors.black87,
+                  onTap: () {
+                    ref.read(motivasiProvider.notifier).fetchMotivasi();
                   },
-                  child: const Text('OK'),
                 ),
-                TextButton(
-                  onPressed: () {
-                    // Tutup dialog jika "Tidak" dipilih
-                    Navigator.pop(context);
+                SpeedDialChild(
+                  child: const Icon(Icons.add, color: Colors.white),
+                  label: 'Add',
+                  backgroundColor: Colors.black87,
+                  onTap: () {
+                    // Tambahkan logika di sini
                   },
-                  child: const Text('Tidak'),
                 ),
               ],
             ),
-          );
-        }
-      },
-      itemBuilder: (BuildContext context) => <PopupMenuEntry<Menu>>[
-        const PopupMenuItem<Menu>(
-          value: Menu.itemOne,
-          child: Text('Account'),
+          ],
         ),
-        const PopupMenuItem<Menu>(
-          value: Menu.itemTwo,
-          child: Text('Settings'),
+      ),
+      appBar: AppBar(
+        centerTitle: true,
+        title: Image.asset(
+          'assets/img/logo.png',
+          height: 40,
         ),
-        const PopupMenuItem<Menu>(
-          value: Menu.itemThree,
-          child: Text('Sign Out'),
+        elevation: 0,
+        backgroundColor: Colors.white,
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1.0),
+          child: Container(
+            color: Colors.grey.withAlpha(50), // Warna border
+            height: 1.0,
+          ),
         ),
-      ],
+      ),
+      backgroundColor: const Color.fromARGB(255, 241, 242, 245),
+      body: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              writeSomethingInHere(
+                  context, dataPengguna.avatarLink, dataPengguna),
+              const Text(
+                'Postingan',
+                style: TextStyle(
+                    color: Colors.black87,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 20),
+              ),
+              motivasiList.isEmpty
+                  ? Center(
+                      child: Container(
+                        margin: const EdgeInsets.only(top: 100),
+                        child: const Text('Tidak ada postingan.'),
+                      ),
+                    )
+                  : Column(
+                      children: [
+                        for (var motiv in motivasiList)
+                          dataPengguna.iduser == motiv.user.iduser
+                              ? KartuPostinganSendiri(
+                                  userModel: dataPengguna,
+                                  model: motiv,
+                                  onUpdated: updateData,
+                                  onDeleted: updateData)
+                              : KartuPostingan(model: motiv)
+                      ],
+                    )
+            ],
+          ),
+        ),
+      ),
+      drawer: Drawer(
+        backgroundColor: Colors.white,
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            // Header Drawer
+            UserAccountsDrawerHeader(
+              accountName: Text(dataPengguna.nama),
+              accountEmail: Text(dataPengguna.email),
+              currentAccountPicture: CircleAvatar(
+                backgroundImage: NetworkImage(dataPengguna.avatarLink),
+              ),
+              decoration: const BoxDecoration(
+                color: Colors.black87,
+              ),
+            ),
+            // Menu Profil
+            ListTile(
+              leading: const Icon(Icons.person),
+              title: const Text('Profil'),
+              onTap: () {
+                Navigator.push(context,
+                    MaterialPageRoute(builder: (context) => const SelfProfielPage()));
+              },
+            ),
+            // Menu Pengaturan Akun
+            ListTile(
+              leading: const Icon(Icons.settings),
+              title: const Text('Pengaturan Akun'),
+              onTap: () {
+                Navigator.pop(context); // Menutup drawer
+                // Navigator.push(
+                //   context,
+                //   MaterialPageRoute(
+                //     builder: (context) =>
+                //         PengaturanAkunPage(userModel: dataPengguna),
+                //   ),
+                // );
+              },
+            ),
+            // Menu Logout
+            ListTile(
+              leading: const Icon(Icons.logout),
+              title: const Text('Logout'),
+              onTap: () {
+                Navigator.pop(context); // Menutup drawer
+                showDialog(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return AlertDialog(
+                      title: const Text('Konfirmasi Logout'),
+                      content: const Text('Apakah Anda yakin ingin keluar?'),
+                      actions: [
+                        TextButton(
+                          onPressed: () {
+                            Navigator.of(context).pop(); // Menutup dialog
+                          },
+                          child: const Text('Batal'),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            Navigator.of(context).pushReplacement(
+                                MaterialPageRoute(
+                                    builder: (context) =>
+                                        const LoginScreen())); // Menutup dialog
+                          },
+                          child: const Text('Logout'),
+                        ),
+                      ],
+                    );
+                  },
+                );
+              },
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

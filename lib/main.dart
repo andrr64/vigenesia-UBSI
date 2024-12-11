@@ -1,19 +1,22 @@
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'package:loader_overlay/loader_overlay.dart';
 import 'package:vigenesia_ubsi/provider/user.dart';
 import 'package:vigenesia_ubsi/views/home/homescreen.dart';
 import 'package:vigenesia_ubsi/views/login/login.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await initializeDateFormatting('id_ID', null);
   runApp(const ProviderScope(child: MyApp())); // Tambahkan ProviderScope
 }
 
-const proxy =
-    "http://localhost/Repository/ViGenSia/vigensia_api/index.php/api/";
+const SERVER_API =
+    "http://192.168.1.9:8080/api";
 
 String getApiRoute(route) {
-  return '$proxy/$route';
+  return '$SERVER_API/$route';
 }
 
 class MyApp extends ConsumerWidget {

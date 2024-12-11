@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
-
-import 'package:vigenesia_ubsi/main.dart';
+import 'package:vigenesia_ubsi/layanan/layanan.user.dart';
+import 'package:loader_overlay/loader_overlay.dart';
 
 class Register extends StatefulWidget {
   const Register({super.key});
@@ -28,39 +26,67 @@ class _RegisterState extends State<Register> {
     return emailRegExp.hasMatch(email);
   }
 
-  Future<void> handleSubmit() async {
-    if (_formKey.currentState?.validate() ?? false) {
-      // Validasi password dan konfirmasi password
-      if (_passwordController.text != _confirmPasswordController.text) {
-        _showDialog('Password Tidak Cocok',
-            'Password dan konfirmasi password harus sama.');
-        return;
-      }
-
-      try {
-        // URL API untuk register
-        final response = await http.post(
-          Uri.parse(getApiRoute('registrasi')), // Sesuaikan dengan URL API-mu
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: jsonEncode({
-            'nama': _namaController.text,
-            'profesi': _profesiController.text,
-            'email': _emailController.text,
-            'password': _passwordController.text,
-          }),
-        );
-
-        if (response.statusCode == 200) {
-          _showDialog('Register Berhasil', 'Anda berhasil mendaftar.');
-        } else {
-          _showDialog('Register Gagal', response.body);
+  handleSubmit(BuildContext context) async {
+    try {
+      context.loaderOverlay.show();
+      await Future.delayed(const Duration(milliseconds: 500));
+      if (_formKey.currentState?.validate() ?? false) {
+        // Validasi password dan konfirmasi password
+        if (_passwordController.text != _confirmPasswordController.text) {
+          _showDialog('Password Tidak Cocok',
+              'Password dan konfirmasi password harus sama.');
+          return;
         }
-      } catch (e) {
-        _showDialog('Terjadi Kesalahan',
-            'Tidak dapat menghubungi server. Coba lagi nanti.');
-        print(e);
+        LayananPengguna.daftar(
+            nama: _namaController.text,
+            email: _emailController.text,
+            password: _passwordController.text,
+            profesi: _profesiController.text,
+            onSuccess: (message, userBaru) {
+              if (mounted) {
+                showDialog(
+                  context: context,
+                  builder: (dialogContext) => AlertDialog(
+                    backgroundColor: Colors.white,
+                    title: const Text('Berhasil'),
+                    content: Text(message),
+                    actions: [
+                      TextButton(
+                        onPressed: () {
+                          Navigator.of(dialogContext).pop();
+                          Navigator.of(context).pop();
+                        },
+                        child: const Text('OK'),
+                      ),
+                    ],
+                  ),
+                );
+              }
+            },
+            onFailed: (message) {
+              if (mounted) {
+                showDialog(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    backgroundColor: Colors.white,
+                    title: const Text('Gagal'),
+                    content: Text(message),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        child: const Text('OK'),
+                      ),
+                    ],
+                  ),
+                );
+              }
+            });
+      }
+    } catch (e) {
+      print(e);
+    } finally {
+      if (mounted) {
+        context.loaderOverlay.hide();
       }
     }
   }
@@ -88,135 +114,163 @@ class _RegisterState extends State<Register> {
     );
   }
 
+  Widget formRegister() {
+    return Form(
+      key: _formKey,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Daftar',
+            style: TextStyle(
+              fontSize: 32,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const Text(
+            'Bergabunglah sekarang!',
+            style: TextStyle(
+              fontSize: 16,
+              color: Colors.grey,
+            ),
+          ),
+          const SizedBox(height: 24),
+          _buildTextField(
+            controller: _namaController,
+            label: 'Nama',
+            hint: 'John Doe',
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Nama tidak boleh kosong';
+              }
+              return null;
+            },
+          ),
+          const SizedBox(height: 16),
+          _buildTextField(
+            controller: _profesiController,
+            label: 'Profesi',
+            hint: 'Mahasiswa',
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Profesi tidak boleh kosong';
+              }
+              return null;
+            },
+          ),
+          const SizedBox(height: 16),
+          _buildTextField(
+            controller: _emailController,
+            label: 'Email',
+            hint: 'john@example.com',
+            keyboardType: TextInputType.emailAddress,
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Email tidak boleh kosong';
+              }
+              if (!isValidEmail(value)) {
+                return 'Email tidak valid';
+              }
+              return null;
+            },
+          ),
+          const SizedBox(height: 16),
+          _buildTextField(
+            controller: _passwordController,
+            label: 'Password',
+            hint: '*******',
+            obscureText: true,
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Password tidak boleh kosong';
+              }
+              if (value.length < 10) {
+                return 'Password minimal 10 karakter';
+              }
+              return null;
+            },
+          ),
+          const SizedBox(height: 16),
+          _buildTextField(
+            controller: _confirmPasswordController,
+            label: 'Konfirmasi Password',
+            hint: '*******',
+            obscureText: true,
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Konfirmasi password tidak boleh kosong';
+              }
+              return null;
+            },
+          ),
+          const SizedBox(height: 24),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: () => handleSubmit(context),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue[700],
+                padding: const EdgeInsets.symmetric(vertical: 16.0),
+              ),
+              child: const Text(
+                'Daftar',
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.blue[900],
-      body: Center(
-        child: Container(
-          padding: const EdgeInsets.all(32.0),
-          width: 350,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: const [
-              BoxShadow(
-                color: Colors.black26,
-                blurRadius: 8,
-                offset: Offset(0, 4), // Position of the shadow
+        backgroundColor: Colors.blue[900],
+        body: SingleChildScrollView(
+          child: Stack(
+            children: [
+              Container(
+                width: MediaQuery.of(context).size.width,
+                height: MediaQuery.of(context).size.height,
+                decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                        colors: [Color(0xffB6c0fd), Color(0xff6f7397)],
+                        begin: Alignment.topCenter)),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                        padding: const EdgeInsets.all(32.0),
+                        width: MediaQuery.of(context).size.width * 0.85,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: const [
+                            BoxShadow(
+                              color: Colors.black26,
+                              blurRadius: 8,
+                              offset: Offset(0, 4), // Position of the shadow
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            formRegister(),
+                          ],
+                        )),
+                    const SizedBox(
+                      height: 50,
+                    )
+                  ],
+                ),
               ),
             ],
           ),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Daftar',
-                  style: TextStyle(
-                    fontSize: 32,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const Text(
-                  'Bergabunglah sekarang!',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.grey,
-                  ),
-                ),
-                const SizedBox(height: 24),
-                _buildTextField(
-                  controller: _namaController,
-                  label: 'Nama',
-                  hint: 'John Doe',
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Nama tidak boleh kosong';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
-                _buildTextField(
-                  controller: _profesiController,
-                  label: 'Profesi',
-                  hint: 'Mahasiswa',
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Profesi tidak boleh kosong';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
-                _buildTextField(
-                  controller: _emailController,
-                  label: 'Email',
-                  hint: 'john@example.com',
-                  keyboardType: TextInputType.emailAddress,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Email tidak boleh kosong';
-                    }
-                    if (!isValidEmail(value)) {
-                      return 'Email tidak valid';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
-                _buildTextField(
-                  controller: _passwordController,
-                  label: 'Password',
-                  hint: '*******',
-                  obscureText: true,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Password tidak boleh kosong';
-                    }
-                    if (value.length < 10) {
-                      return 'Password minimal 10 karakter';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
-                _buildTextField(
-                  controller: _confirmPasswordController,
-                  label: 'Konfirmasi Password',
-                  hint: '*******',
-                  obscureText: true,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Konfirmasi password tidak boleh kosong';
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 24),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: handleSubmit,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue[700],
-                      padding: const EdgeInsets.symmetric(vertical: 16.0),
-                    ),
-                    child: const Text(
-                      'Daftar',
-                      style: TextStyle(color: Colors.white),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
+        ));
   }
 
   // Membuat widget TextFormField dengan validasi
@@ -236,11 +290,11 @@ class _RegisterState extends State<Register> {
         labelText: label,
         hintText: hint,
         hintStyle: TextStyle(color: Colors.grey[300]),
-        labelStyle: TextStyle(color: Colors.black87),
+        labelStyle: const TextStyle(color: Colors.black87),
         focusedBorder: OutlineInputBorder(
           borderSide: BorderSide(color: Colors.blue[800]!),
         ),
-        enabledBorder: OutlineInputBorder(
+        enabledBorder: const OutlineInputBorder(
           borderSide: BorderSide(color: Colors.black45),
         ),
         floatingLabelBehavior: FloatingLabelBehavior.always, // Menambahkan ini

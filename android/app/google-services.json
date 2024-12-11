@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "638661858207",
+    "project_id": "andreas-web-cloud-5c228",
+    "storage_bucket": "andreas-web-cloud-5c228.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:638661858207:android:b596ca678df9614dd5a3aa",
+        "android_client_info": {
+          "package_name": "com.example.vigensia_app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "638661858207-ov3kf920vg4bacn9q5ckegbcbo5bht7o.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC1LX-9IoPHGuOO5mEjPEsbnjb-zghJE00"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "638661858207-ov3kf920vg4bacn9q5ckegbcbo5bht7o.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
